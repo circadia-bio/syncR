@@ -2,11 +2,11 @@
 
 ## Authors
 
-- **Lucas França**. Author, maintainer.
-  [](https://orcid.org/0000-0003-0853-1319)
+- **[Lucas França](https://orcid.org/0000-0003-0853-1319)**. Author,
+  maintainer. [](https://orcid.org/0000-0003-0853-1319)
 
-- **Mario Leocadio-Miguel**. Author.
-  [](https://orcid.org/0000-0002-7248-3529)
+- **[Mario Leocadio-Miguel](https://orcid.org/0000-0002-7248-3529)**.
+  Author. [](https://orcid.org/0000-0002-7248-3529)
 
 ## Citation
 
