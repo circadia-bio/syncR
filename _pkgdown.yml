@@ -3,9 +3,10 @@ url: https://syncr.circadia-lab.uk
 template:
   bootstrap: 5
   bslib:
-    primary: "#F0A500"
-    bg: "#2D2640"
-    fg: "#E8D5B0"
+    primary: "#FE7F2D"
+    secondary: "#7FB5C8"
+    bg: "#EAECF0"
+    fg: "#233D4D"
     base_font: {google: "Inter"}
     heading_font: {google: "Inter"}
     code_font: {google: "Fira Code"}
