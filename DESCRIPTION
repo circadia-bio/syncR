@@ -1,0 +1,30 @@
+Package: syncR
+Title: Integrate and Coordinate Data Across the Circadia Lab Package Ecosystem
+Version: 0.1.0
+Authors@R: 
+    person("Lucas", "França", , "lucas.franca@northumbria.ac.uk", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-HERE"))
+Description: syncR is the integrator and coordinator of the Circadia Lab R ecosystem.
+    It pulls sociodemographic and questionnaire data from tallieR, sleep diary data
+    from slumbR, and actigraphy-derived circadian metrics from zeitR into a single
+    unified, participant-indexed database. syncR::sync() — pulling everything into
+    alignment, just like the SCN does.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/circadia-bio/syncR
+BugReports: https://github.com/circadia-bio/syncR/issues
+Imports:
+    dplyr,
+    rlang,
+    cli
+Suggests:
+    zeitR,
+    slumbR,
+    tallieR,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
