@@ -1,0 +1,47 @@
+url: https://syncr.circadia-lab.uk
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#F0A500"
+    bg: "#2D2640"
+    fg: "#E8D5B0"
+    base_font: {google: "Inter"}
+    heading_font: {google: "Inter"}
+    code_font: {google: "Fira Code"}
+
+navbar:
+  bg: dark
+  structure:
+    left: [intro, reference, articles]
+    right: [github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/circadia-bio/syncR
+      aria-label: GitHub
+
+home:
+  title: "syncR — Circadia Lab Data Integrator"
+  description: >
+    syncR::sync() — pulling everything into alignment, just like the SCN does.
+
+reference:
+  - title: "Core"
+    desc: "Primary integration function"
+    contents:
+      - sync
+  - title: "Package"
+    contents:
+      - syncR-package
+
+articles:
+  - title: "Getting started"
+    navbar: ~
+    contents:
+      - syncR
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
