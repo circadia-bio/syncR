@@ -66,87 +66,441 @@ ecosystem.</p>
 <p><em>syncR::sync() — pulling everything into alignment, just like the
 SCN does.</em></p>
 </blockquote>
-<p>The package pulls three streams of participant data into a single
-unified, participant-indexed database:</p>
+<p>The <code><a href="../reference/sync.html">sync()</a></code> function pulls three streams of participant
+data into a single unified, participant-indexed database:</p>
 <table class="table">
 <colgroup>
-<col width="14%">
-<col width="18%">
-<col width="67%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
 </colgroup>
 <thead><tr class="header">
-<th>Source</th>
+<th>Argument</th>
 <th>Package</th>
+<th>Typical source function</th>
 <th>Data type</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><code>tallie</code></td>
 <td><strong>tallieR</strong></td>
-<td>Sociodemographics, one-time questionnaires</td>
+<td><code><a href="https://tallier.circadia-lab.uk/reference/scores_wide.html" class="external-link">scores_wide()</a></code></td>
+<td>Sociodemographics + questionnaire scores</td>
 </tr>
 <tr class="even">
 <td><code>slumb</code></td>
 <td><strong>slumbR</strong></td>
+<td><code><a href="https://slumbr.circadia-lab.uk/reference/diary_wide.html" class="external-link">diary_wide()</a></code></td>
 <td>Sleep diary entries, subjective sleep quality</td>
 </tr>
 <tr class="odd">
 <td><code>zeit</code></td>
 <td><strong>zeitR</strong></td>
+<td><code><a href="https://slumbr.circadia-lab.uk/reference/study_summary.html" class="external-link">study_summary()</a></code></td>
 <td>Actigraphy metrics, circadian parameters</td>
 </tr>
 </tbody>
 </table>
+<hr>
 </div>
 <div class="section level2">
-<h2 id="basic-usage">Basic usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+<h2 id="test-data">Test data<a class="anchor" aria-label="anchor" href="#test-data"></a>
 </h2>
+<p>This vignette uses the built-in test data bundled with syncR, which
+mirrors the real output of each package. Load it with
+<code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS()</a></code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/circadia-bio/syncR" class="external-link">syncR</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
-<span>  tallie <span class="op">=</span> <span class="fu">tallieR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  slumb  <span class="op">=</span> <span class="fu">slumbR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  zeit   <span class="op">=</span> <span class="fu">zeitR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The result is a tidy, participant-indexed tibble with one row per
-participant per night (where applicable), with columns from all supplied
-sources.</p>
+<code class="sourceCode R"><span><span class="va">tallie</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata/tallie_test.rds"</span>, package <span class="op">=</span> <span class="st">"syncR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">slumb</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata/slumb_test.rds"</span>,  package <span class="op">=</span> <span class="st">"syncR"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">zeit</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"testdata/zeit_test.rds"</span>,   package <span class="op">=</span> <span class="st">"syncR"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="tallier-data">tallieR data<a class="anchor" aria-label="anchor" href="#tallier-data"></a>
+</h3>
+<p>One row per participant, with demographics and questionnaire scores
+from <code><a href="https://tallier.circadia-lab.uk/reference/scores_wide.html" class="external-link">tallieR::scores_wide()</a></code>:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">tallie</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rows: 5</span></span>
+<span><span class="co">#&gt; Columns: 16</span></span>
+<span><span class="co">#&gt; $ participant_id <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "P001"<span style="color: #949494;">, </span>"P002"<span style="color: #949494;">, </span>"P003"<span style="color: #949494;">, </span>"P004"<span style="color: #949494;">, </span>"P005"</span></span>
+<span><span class="co">#&gt; $ code           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "P001"<span style="color: #949494;">, </span>"P002"<span style="color: #949494;">, </span>"P003"<span style="color: #949494;">, </span>"P004"<span style="color: #949494;">, </span>"P005"</span></span>
+<span><span class="co">#&gt; $ name           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Alice Smith"<span style="color: #949494;">, </span>"Bob Jones"<span style="color: #949494;">, </span>"Clara Diaz"<span style="color: #949494;">, </span>"David Lee"<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ age            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 28<span style="color: #949494;">, </span>34<span style="color: #949494;">, </span>22<span style="color: #949494;">, </span>45<span style="color: #949494;">, </span>31</span></span>
+<span><span class="co">#&gt; $ sex            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "female"<span style="color: #949494;">, </span>"male"<span style="color: #949494;">, </span>"female"<span style="color: #949494;">, </span>"male"<span style="color: #949494;">, </span>"female"</span></span>
+<span><span class="co">#&gt; $ bmi            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 22.4<span style="color: #949494;">, </span>26.1<span style="color: #949494;">, </span>20.8<span style="color: #949494;">, </span>28.3<span style="color: #949494;">, </span>23.7</span></span>
+<span><span class="co">#&gt; $ group          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "control"<span style="color: #949494;">, </span>"control"<span style="color: #949494;">, </span>"control"<span style="color: #949494;">, </span>"control"<span style="color: #949494;">, </span>"control"</span></span>
+<span><span class="co">#&gt; $ site           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "Newcastle"<span style="color: #949494;">, </span>"Newcastle"<span style="color: #949494;">, </span>"Newcastle"<span style="color: #949494;">, </span>"Newcastle"<span style="color: #949494;">, </span>"Ne…</span></span>
+<span><span class="co">#&gt; $ session        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "baseline"<span style="color: #949494;">, </span>"baseline"<span style="color: #949494;">, </span>"baseline"<span style="color: #949494;">, </span>"baseline"<span style="color: #949494;">, </span>"baseli…</span></span>
+<span><span class="co">#&gt; $ ess_score      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 8<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>6<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>9</span></span>
+<span><span class="co">#&gt; $ ess_completed  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "2025-01-13T09:00:00.000Z"<span style="color: #949494;">, </span>"2025-01-13T09:00:00.000Z"<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ isi_score      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 7<span style="color: #949494;">, </span>18<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>9</span></span>
+<span><span class="co">#&gt; $ isi_completed  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "2025-01-13T09:10:00.000Z"<span style="color: #949494;">, </span>"2025-01-13T09:10:00.000Z"<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ meq_score      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 52<span style="color: #949494;">, </span>38<span style="color: #949494;">, </span>61<span style="color: #949494;">, </span>44<span style="color: #949494;">, </span>57</span></span>
+<span><span class="co">#&gt; $ meq_completed  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "2025-01-13T09:20:00.000Z"<span style="color: #949494;">, </span>"2025-01-13T09:20:00.000Z"<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ created_at     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "2025-01-13T08:55:00.000Z"<span style="color: #949494;">, </span>"2025-01-13T08:55:00.000Z"<span style="color: #949494;">,</span>…</span></span></code></pre></div>
+<p>Key fields: <code>participant_id</code> (the join key),
+sociodemographic variables (<code>age</code>, <code>sex</code>,
+<code>bmi</code>, <code>group</code>), and instrument scores
+(<code>ess_score</code>, <code>isi_score</code>,
+<code>meq_score</code>).</p>
+</div>
+<div class="section level3">
+<h3 id="slumbr-data">slumbR data<a class="anchor" aria-label="anchor" href="#slumbr-data"></a>
+</h3>
+<p>One row per participant per night, from
+<code><a href="https://slumbr.circadia-lab.uk/reference/diary_wide.html" class="external-link">slumbR::diary_wide()</a></code> +
+<code><a href="https://slumbr.circadia-lab.uk/reference/compute_sleep_vars.html" class="external-link">slumbR::compute_sleep_vars()</a></code>. Morning columns are prefixed
+<code>m_</code> and evening columns <code>e_</code>. Seven nights across
+five participants gives 35 rows:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">slumb</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rows: 35</span></span>
+<span><span class="co">#&gt; Columns: 28</span></span>
+<span><span class="co">#&gt; $ participant_id      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "P001"<span style="color: #949494;">, </span>"P001"<span style="color: #949494;">, </span>"P001"<span style="color: #949494;">, </span>"P001"<span style="color: #949494;">, </span>"P001"<span style="color: #949494;">, </span>"P001"<span style="color: #949494;">, </span>"P…</span></span>
+<span><span class="co">#&gt; $ date                <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "2025-01-13"<span style="color: #949494;">, </span>"2025-01-14"<span style="color: #949494;">, </span>"2025-01-15"<span style="color: #949494;">, </span>"2025-01…</span></span>
+<span><span class="co">#&gt; $ m_bed_time          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 23.74<span style="color: #949494;">, </span>23.30<span style="color: #949494;">, </span>23.57<span style="color: #949494;">, </span>23.46<span style="color: #949494;">, </span>23.98<span style="color: #949494;">, </span>23.93<span style="color: #949494;">, </span>23.59<span style="color: #949494;">, </span>2…</span></span>
+<span><span class="co">#&gt; $ m_sleep_time        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 23.71<span style="color: #949494;">, </span>23.57<span style="color: #949494;">, </span>23.81<span style="color: #949494;">, </span>23.78<span style="color: #949494;">, </span>23.46<span style="color: #949494;">, </span>23.66<span style="color: #949494;">, </span>24.07<span style="color: #949494;">, </span>2…</span></span>
+<span><span class="co">#&gt; $ m_sol_min           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 13<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>17<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>25<span style="color: #949494;">, </span>18<span style="color: #949494;">, </span>22<span style="color: #949494;">, </span>29<span style="color: #949494;">, </span>31<span style="color: #949494;">, </span>26<span style="color: #949494;">, </span>2…</span></span>
+<span><span class="co">#&gt; $ m_final_waking      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 6.90<span style="color: #949494;">, </span>6.11<span style="color: #949494;">, </span>6.70<span style="color: #949494;">, </span>7.11<span style="color: #949494;">, </span>7.05<span style="color: #949494;">, </span>6.60<span style="color: #949494;">, </span>6.85<span style="color: #949494;">, </span>7.34<span style="color: #949494;">, </span>7.…</span></span>
+<span><span class="co">#&gt; $ m_rise_time         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 6.45<span style="color: #949494;">, </span>7.95<span style="color: #949494;">, </span>7.69<span style="color: #949494;">, </span>7.51<span style="color: #949494;">, </span>7.59<span style="color: #949494;">, </span>7.27<span style="color: #949494;">, </span>7.42<span style="color: #949494;">, </span>7.47<span style="color: #949494;">, </span>7.…</span></span>
+<span><span class="co">#&gt; $ m_woke_during_night <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>T…</span></span>
+<span><span class="co">#&gt; $ m_n_wakings         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ m_waso_min          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 18<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>24<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>31<span style="color: #949494;">, </span>25<span style="color: #949494;">, </span>35<span style="color: #949494;">, </span>29<span style="color: #949494;">, </span>31<span style="color: #949494;">, </span>45<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ m_alcohol_drinks    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ m_sleep_aid_used    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>F…</span></span>
+<span><span class="co">#&gt; $ m_sleep_aid_count   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ m_tib_min           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 504.7<span style="color: #949494;">, </span>469.8<span style="color: #949494;">, </span>486.5<span style="color: #949494;">, </span>491.4<span style="color: #949494;">, </span>487.3<span style="color: #949494;">, </span>478.1<span style="color: #949494;">, </span>507.2<span style="color: #949494;">, </span>4…</span></span>
+<span><span class="co">#&gt; $ m_tst_min           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 482.7<span style="color: #949494;">, </span>447.8<span style="color: #949494;">, </span>464.5<span style="color: #949494;">, </span>469.4<span style="color: #949494;">, </span>465.3<span style="color: #949494;">, </span>456.1<span style="color: #949494;">, </span>485.2<span style="color: #949494;">, </span>3…</span></span>
+<span><span class="co">#&gt; $ m_se_pct            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 95.6<span style="color: #949494;">, </span>95.3<span style="color: #949494;">, </span>95.5<span style="color: #949494;">, </span>95.5<span style="color: #949494;">, </span>95.5<span style="color: #949494;">, </span>95.4<span style="color: #949494;">, </span>95.7<span style="color: #949494;">, </span>84.6<span style="color: #949494;">, </span>85…</span></span>
+<span><span class="co">#&gt; $ m_sol_flag          <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>F…</span></span>
+<span><span class="co">#&gt; $ m_waso_flag         <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>T…</span></span>
+<span><span class="co">#&gt; $ m_tst_flag          <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>T…</span></span>
+<span><span class="co">#&gt; $ m_se_flag           <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>T…</span></span>
+<span><span class="co">#&gt; $ m_sleep_quality     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ m_restedness        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ e_nap_taken         <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>TRUE<span style="color: #949494;">, </span>FA…</span></span>
+<span><span class="co">#&gt; $ e_nap_duration_min  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>30<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span>…</span></span>
+<span><span class="co">#&gt; $ e_caffeine_drinks   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>1<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ e_exercised         <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> TRUE<span style="color: #949494;">, </span>TRUE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>TRUE<span style="color: #949494;">, </span>FALS…</span></span>
+<span><span class="co">#&gt; $ e_sleep_med_used    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span> FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>FALSE<span style="color: #949494;">, </span>F…</span></span>
+<span><span class="co">#&gt; $ e_sleep_med_count   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">,</span>…</span></span></code></pre></div>
+<p>Key morning fields: timing (<code>m_bed_time</code>,
+<code>m_rise_time</code>, <code>m_sol_min</code>), derived sleep
+variables (<code>m_tib_min</code>, <code>m_tst_min</code>,
+<code>m_se_pct</code>), substance use (<code>m_alcohol_drinks</code>,
+<code>m_sleep_aid_used</code>), clinical flags (<code>m_sol_flag</code>,
+<code>m_waso_flag</code>, <code>m_tst_flag</code>,
+<code>m_se_flag</code>), and subjective ratings
+(<code>m_sleep_quality</code>, <code>m_restedness</code>).</p>
+<p>Key evening fields: napping (<code>e_nap_taken</code>,
+<code>e_nap_duration_min</code>), substance use
+(<code>e_caffeine_drinks</code>, <code>e_sleep_med_used</code>), and
+activity (<code>e_exercised</code>).</p>
+</div>
+<div class="section level3">
+<h3 id="zeitr-data">zeitR data<a class="anchor" aria-label="anchor" href="#zeitr-data"></a>
+</h3>
+<p>One row per participant, from
+<code><a href="https://zeitr.circadia-lab.uk/reference/study_summary.html" class="external-link">zeitR::study_summary()</a></code>:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">zeit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rows: 5</span></span>
+<span><span class="co">#&gt; Columns: 12</span></span>
+<span><span class="co">#&gt; $ participant_id <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "P001"<span style="color: #949494;">, </span>"P002"<span style="color: #949494;">, </span>"P003"<span style="color: #949494;">, </span>"P004"<span style="color: #949494;">, </span>"P005"</span></span>
+<span><span class="co">#&gt; $ n_epochs       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> 20160<span style="color: #949494;">, </span>20160<span style="color: #949494;">, </span>17280<span style="color: #949494;">, </span>20160<span style="color: #949494;">, </span>20160</span></span>
+<span><span class="co">#&gt; $ n_days         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 7<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>6<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>7</span></span>
+<span><span class="co">#&gt; $ start          <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span> 2025-01-13<span style="color: #949494;">, </span>2025-01-13<span style="color: #949494;">, </span>2025-01-13<span style="color: #949494;">, </span>2025-01-13<span style="color: #949494;">, </span>2025-01…</span></span>
+<span><span class="co">#&gt; $ end            <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span> 2025-01-19 23:59:00<span style="color: #949494;">, </span>2025-01-19 23:59:00<span style="color: #949494;">, </span>2025-01-18 23…</span></span>
+<span><span class="co">#&gt; $ IS             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0.72<span style="color: #949494;">, </span>0.58<span style="color: #949494;">, </span>0.81<span style="color: #949494;">, </span>0.65<span style="color: #949494;">, </span>0.76</span></span>
+<span><span class="co">#&gt; $ IV             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0.48<span style="color: #949494;">, </span>0.71<span style="color: #949494;">, </span>0.39<span style="color: #949494;">, </span>0.62<span style="color: #949494;">, </span>0.44</span></span>
+<span><span class="co">#&gt; $ RA             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0.88<span style="color: #949494;">, </span>0.74<span style="color: #949494;">, </span>0.92<span style="color: #949494;">, </span>0.79<span style="color: #949494;">, </span>0.86</span></span>
+<span><span class="co">#&gt; $ L5             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 12.3<span style="color: #949494;">, </span>18.7<span style="color: #949494;">, </span>8.9<span style="color: #949494;">, </span>15.4<span style="color: #949494;">, </span>11.2</span></span>
+<span><span class="co">#&gt; $ L5_onset       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "02:30"<span style="color: #949494;">, </span>"03:15"<span style="color: #949494;">, </span>"02:00"<span style="color: #949494;">, </span>"02:45"<span style="color: #949494;">, </span>"02:20"</span></span>
+<span><span class="co">#&gt; $ M10            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 312.4<span style="color: #949494;">, </span>278.9<span style="color: #949494;">, </span>341.2<span style="color: #949494;">, </span>295.6<span style="color: #949494;">, </span>324.8</span></span>
+<span><span class="co">#&gt; $ M10_onset      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "10:30"<span style="color: #949494;">, </span>"11:00"<span style="color: #949494;">, </span>"10:00"<span style="color: #949494;">, </span>"10:45"<span style="color: #949494;">, </span>"10:15"</span></span></code></pre></div>
+<p>Key circadian fields: <code>IS</code> (interdaily stability),
+<code>IV</code> (intradaily variability), <code>RA</code> (relative
+amplitude), <code>L5</code> / <code>L5_onset</code>, <code>M10</code> /
+<code>M10_onset</code>.</p>
+<hr>
+</div>
 </div>
 <div class="section level2">
-<h2 id="joining-strategies">Joining strategies<a class="anchor" aria-label="anchor" href="#joining-strategies"></a>
+<h2 id="synchronising-with-sync">Synchronising with <code>sync()</code><a class="anchor" aria-label="anchor" href="#synchronising-with-sync"></a>
 </h2>
-<p>By default <code><a href="../reference/sync.html">sync()</a></code> performs a left join anchored on the
-first supplied source. Use the <code>join</code> argument to change
-this:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Only participants present in all three sources</span></span>
-<span><span class="va">db_complete</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
-<span>  tallie <span class="op">=</span> <span class="fu">tallieR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  slumb  <span class="op">=</span> <span class="fu">slumbR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  zeit   <span class="op">=</span> <span class="fu">zeitR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
+<div class="section level3">
+<h3 id="default-left-join">Default left join<a class="anchor" aria-label="anchor" href="#default-left-join"></a>
+</h3>
+<p>The default call performs a <strong>left join</strong> anchored on
+the first supplied source. Since <code>slumb</code> has multiple rows
+per participant, the result expands to one row per participant per night
+— with questionnaire scores and circadian variables repeated across all
+nights for each participant:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
+<span>  tallie <span class="op">=</span> <span class="va">tallie</span>,</span>
+<span>  slumb  <span class="op">=</span> <span class="va">slumb</span>,</span>
+<span>  zeit   <span class="op">=</span> <span class="va">zeit</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">db</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 35 54</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
+<span>    <span class="va">participant_id</span>, <span class="va">date</span>,</span>
+<span>    <span class="va">age</span>, <span class="va">sex</span>, <span class="va">ess_score</span>, <span class="va">isi_score</span>, <span class="va">meq_score</span>,</span>
+<span>    <span class="va">m_tst_min</span>, <span class="va">m_se_pct</span>, <span class="va">m_sleep_quality</span>,</span>
+<span>    <span class="va">IS</span>, <span class="va">IV</span>, <span class="va">RA</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 13</span></span></span>
+<span><span class="co">#&gt;    participant_id date         age sex   ess_score isi_score meq_score m_tst_min</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> P001           2025-01-13    28 fema…         8         7        52      483.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> P001           2025-01-14    28 fema…         8         7        52      448.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> P001           2025-01-15    28 fema…         8         7        52      464.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> P001           2025-01-16    28 fema…         8         7        52      469.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> P001           2025-01-17    28 fema…         8         7        52      465.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> P001           2025-01-18    28 fema…         8         7        52      456.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> P001           2025-01-19    28 fema…         8         7        52      485.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> P002           2025-01-13    34 male         14        18        38      347.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> P002           2025-01-14    34 male         14        18        38      371.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> P002           2025-01-15    34 male         14        18        38      337.</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 more variables: m_se_pct &lt;dbl&gt;, m_sleep_quality &lt;int&gt;, IS &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   IV &lt;dbl&gt;, RA &lt;dbl&gt;</span></span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="inner-join">Inner join<a class="anchor" aria-label="anchor" href="#inner-join"></a>
+</h3>
+<p>Use <code>join = "inner"</code> to retain only participants present
+in <strong>all three</strong> sources:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db_inner</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
+<span>  tallie <span class="op">=</span> <span class="va">tallie</span>,</span>
+<span>  slumb  <span class="op">=</span> <span class="va">slumb</span>,</span>
+<span>  zeit   <span class="op">=</span> <span class="va">zeit</span>,</span>
 <span>  join   <span class="op">=</span> <span class="st">"inner"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># All participants from any source, NAs where data is absent</span></span>
-<span><span class="va">db_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
-<span>  tallie <span class="op">=</span> <span class="fu">tallieR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  slumb  <span class="op">=</span> <span class="fu">slumbR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  zeit   <span class="op">=</span> <span class="fu">zeitR</span><span class="fu">::</span><span class="fu">export</span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  join   <span class="op">=</span> <span class="st">"full"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">db_inner</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 35</span></span></code></pre></div>
 </div>
-<div class="section level2">
-<h2 id="custom-participant-id-column">Custom participant ID column<a class="anchor" aria-label="anchor" href="#custom-participant-id-column"></a>
-</h2>
-<p>If your data uses a different participant identifier column name,
-pass it via <code>id_col</code>:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="section level3">
+<h3 id="full-join">Full join<a class="anchor" aria-label="anchor" href="#full-join"></a>
+</h3>
+<p>Use <code>join = "full"</code> to retain <strong>all</strong>
+participants from any source, filling <code>NA</code> where data is
+absent:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
+<span>  tallie <span class="op">=</span> <span class="va">tallie</span>,</span>
+<span>  slumb  <span class="op">=</span> <span class="va">slumb</span>,</span>
+<span>  zeit   <span class="op">=</span> <span class="va">zeit</span>,</span>
+<span>  join   <span class="op">=</span> <span class="st">"full"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">db_full</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 35</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="custom-participant-id-column">Custom participant ID column<a class="anchor" aria-label="anchor" href="#custom-participant-id-column"></a>
+</h3>
+<p>If your data uses a different column name, pass it via
+<code>id_col</code>:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
 <span>  tallie <span class="op">=</span> <span class="va">my_tallie_data</span>,</span>
+<span>  slumb  <span class="op">=</span> <span class="va">my_slumb_data</span>,</span>
 <span>  zeit   <span class="op">=</span> <span class="va">my_zeit_data</span>,</span>
 <span>  id_col <span class="op">=</span> <span class="st">"pid"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="partial-sync">Partial sync<a class="anchor" aria-label="anchor" href="#partial-sync"></a>
+</h3>
+<p>All sources are optional — pass only what you have:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db_partial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
+<span>  tallie <span class="op">=</span> <span class="va">tallie</span>,</span>
+<span>  zeit   <span class="op">=</span> <span class="va">zeit</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">db_partial</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  5 27</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="example-analyses">Example analyses<a class="anchor" aria-label="anchor" href="#example-analyses"></a>
+</h2>
+<p>With a unified database, cross-domain analyses require no further
+joining.</p>
+<div class="section level3">
+<h3 id="circadian-type-vs--sleep-efficiency">Circadian type vs. sleep efficiency<a class="anchor" aria-label="anchor" href="#circadian-type-vs--sleep-efficiency"></a>
+</h3>
+<p>MEQ chronotype score against actigraphy-derived IS and mean
+subjective sleep efficiency:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">participant_id</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    meq_score    <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span><span class="va">meq_score</span><span class="op">)</span>,</span>
+<span>    IS           <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span><span class="va">IS</span><span class="op">)</span>,</span>
+<span>    mean_se_pct  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_se_pct</span>,        na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_quality <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_sleep_quality</span>,  na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">meq_score</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
+<span><span class="co">#&gt;   participant_id meq_score    IS mean_se_pct mean_quality</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> P003                  61  0.81        97.4         3.57</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> P005                  57  0.76        94.7         3.86</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> P001                  52  0.72        95.5         3.43</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> P004                  44  0.65        91.0         4.29</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> P002                  38  0.58        84.7         3.57</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="insomnia-severity-vs--objective-sleep">Insomnia severity vs. objective sleep<a class="anchor" aria-label="anchor" href="#insomnia-severity-vs--objective-sleep"></a>
+</h3>
+<p>ISI score against mean TST and WASO from the diary:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">participant_id</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    isi_score     <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span><span class="va">isi_score</span><span class="op">)</span>,</span>
+<span>    mean_tst_h    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_tst_min</span>,  na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">/</span> <span class="fl">60</span>,</span>
+<span>    mean_waso_min <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_waso_min</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_se_pct   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_se_pct</span>,   na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">isi_score</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 5</span></span></span>
+<span><span class="co">#&gt;   participant_id isi_score mean_tst_h mean_waso_min mean_se_pct</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> P002                  18       5.82         32.9         84.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> P004                  13       7.09         23.4         91.0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> P005                   9       7.83         13.7         94.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> P001                   7       7.79         13.9         95.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> P003                   4       8.25          7.86        97.4</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="substance-use-and-sleep-quality">Substance use and sleep quality<a class="anchor" aria-label="anchor" href="#substance-use-and-sleep-quality"></a>
+</h3>
+<p>Nights with alcohol consumption or sleep aid use, and their impact on
+next- morning sleep quality and efficiency:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    any_substance <span class="op">=</span> <span class="va">m_alcohol_drinks</span> <span class="op">&gt;</span> <span class="fl">0</span> <span class="op">|</span> <span class="va">m_sleep_aid_used</span> <span class="op">|</span> <span class="va">e_caffeine_drinks</span> <span class="op">&gt;</span> <span class="fl">3</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">any_substance</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    n_nights        <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    mean_tst_h      <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_tst_min</span>,      na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">/</span> <span class="fl">60</span>,</span>
+<span>    mean_se_pct     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_se_pct</span>,        na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_waso_min   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_waso_min</span>,      na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    mean_quality    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">m_sleep_quality</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 6</span></span></span>
+<span><span class="co">#&gt;   any_substance n_nights mean_tst_h mean_se_pct mean_waso_min mean_quality</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> FALSE               12       7.90        96.1          12.2         4   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> TRUE                23       7.07        90.9          21.6         3.61</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="nights-with-poor-sleep-efficiency">Nights with poor sleep efficiency<a class="anchor" aria-label="anchor" href="#nights-with-poor-sleep-efficiency"></a>
+</h3>
+<p>Flagging nights where SE &lt; 85%, alongside each participant’s
+circadian profile:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">db</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">m_se_flag</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span></span>
+<span>    <span class="va">participant_id</span>, <span class="va">date</span>,</span>
+<span>    <span class="va">m_tst_min</span>, <span class="va">m_se_pct</span>, <span class="va">m_alcohol_drinks</span>, <span class="va">m_sleep_aid_used</span>,</span>
+<span>    <span class="va">IS</span>, <span class="va">RA</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">m_se_pct</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 4 × 8</span></span></span>
+<span><span class="co">#&gt;   participant_id date       m_tst_min m_se_pct m_alcohol_drinks m_sleep_aid_used</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> P002           2025-01-16      328.     83.9                1 FALSE           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> P002           2025-01-15      337.     84.2                1 FALSE           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> P002           2025-01-17      335.     84.2                2 FALSE           </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> P002           2025-01-13      347.     84.6                1 FALSE           </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: IS &lt;dbl&gt;, RA &lt;dbl&gt;</span></span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="working-with-real-data">Working with real data<a class="anchor" aria-label="anchor" href="#working-with-real-data"></a>
+</h2>
+<p>In a real study, the inputs to <code><a href="../reference/sync.html">sync()</a></code> come directly from
+the package export functions:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tallier.circadia-lab.uk" class="external-link">tallieR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/circadia-bio/slumbR" class="external-link">slumbR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://zeitr.circadia-lab.uk" class="external-link">zeitR</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/circadia-bio/syncR" class="external-link">syncR</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tallie</span> <span class="op">&lt;-</span> <span class="fu">tallieR</span><span class="fu">::</span><span class="fu"><a href="https://tallier.circadia-lab.uk/reference/read_scoreme.html" class="external-link">read_scoreme</a></span><span class="op">(</span><span class="st">"exports/scoreme_export.json"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">tallieR</span><span class="fu">::</span><span class="fu"><a href="https://tallier.circadia-lab.uk/reference/scores_wide.html" class="external-link">scores_wide</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">slumb</span> <span class="op">&lt;-</span> <span class="fu">slumbR</span><span class="fu">::</span><span class="fu"><a href="https://slumbr.circadia-lab.uk/reference/read_study.html" class="external-link">read_study</a></span><span class="op">(</span><span class="st">"exports/sleep_diaries/"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">slumbR</span><span class="fu">::</span><span class="fu"><a href="https://slumbr.circadia-lab.uk/reference/diary_wide.html" class="external-link">diary_wide</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">zeit</span> <span class="op">&lt;-</span> <span class="fu">zeitR</span><span class="fu">::</span><span class="fu"><a href="https://zeitr.circadia-lab.uk/reference/read_actigraphy_dir.html" class="external-link">read_actigraphy_dir</a></span><span class="op">(</span><span class="st">"recordings/"</span>, tz <span class="op">=</span> <span class="st">"Europe/London"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">zeitR</span><span class="fu">::</span><span class="fu"><a href="https://zeitr.circadia-lab.uk/reference/study_summary.html" class="external-link">study_summary</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/sync.html">sync</a></span><span class="op">(</span></span>
+<span>  tallie <span class="op">=</span> <span class="va">tallie</span>,</span>
+<span>  slumb  <span class="op">=</span> <span class="va">slumb</span>,</span>
+<span>  zeit   <span class="op">=</span> <span class="va">zeit</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="session-info">Session info<a class="anchor" aria-label="anchor" href="#session-info"></a>
+</h2>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] dplyr_1.2.1 syncR_0.1.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] vctrs_0.7.3       cli_3.6.6         knitr_1.51        rlang_1.2.0      </span></span>
+<span><span class="co">#&gt;  [5] xfun_0.59         otel_0.2.0        generics_0.1.4    textshaping_1.0.5</span></span>
+<span><span class="co">#&gt;  [9] jsonlite_2.0.0    glue_1.8.1        htmltools_0.5.9   ragg_1.5.2       </span></span>
+<span><span class="co">#&gt; [13] sass_0.4.10       rmarkdown_2.31    tibble_3.3.1      evaluate_1.0.5   </span></span>
+<span><span class="co">#&gt; [17] jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5  </span></span>
+<span><span class="co">#&gt; [21] compiler_4.6.0    fs_2.1.0          pkgconfig_2.0.3   systemfonts_1.3.2</span></span>
+<span><span class="co">#&gt; [25] digest_0.6.39     R6_2.6.1          utf8_1.2.6        tidyselect_1.2.1 </span></span>
+<span><span class="co">#&gt; [29] pillar_1.11.1     magrittr_2.0.5    bslib_0.11.0      withr_3.0.3      </span></span>
+<span><span class="co">#&gt; [33] tools_4.6.0       pkgdown_2.2.0     cachem_1.1.0      desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
