@@ -26,6 +26,7 @@ home:
   title: "syncR — Circadia Lab Data Integrator"
   description: >
     syncR::sync() — pulling everything into alignment, just like the SCN does.
+  logo: man/figures/logo.svg
 
 reference:
   - title: "Core"
