@@ -8,8 +8,14 @@ vignette: >
 ---
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  message  = FALSE,
+  warning  = FALSE
+)
 library(syncR)
+library(dplyr)
 ```
 
 ## Overview
@@ -18,62 +24,273 @@ syncR is the integrator and coordinator of the Circadia Lab R ecosystem.
 
 > *syncR::sync() — pulling everything into alignment, just like the SCN does.*
 
-The package pulls three streams of participant data into a single unified,
-participant-indexed database:
+The `sync()` function pulls three streams of participant data into a single
+unified, participant-indexed database:
 
-| Source   | Package     | Data type                                     |
-|----------|-------------|-----------------------------------------------|
-| `tallie` | **tallieR** | Sociodemographics, one-time questionnaires    |
-| `slumb`  | **slumbR**  | Sleep diary entries, subjective sleep quality |
-| `zeit`   | **zeitR**   | Actigraphy metrics, circadian parameters      |
+| Argument | Package | Typical source function | Data type |
+|---|---|---|---|
+| `tallie` | **tallieR** | `scores_wide()` | Sociodemographics + questionnaire scores |
+| `slumb`  | **slumbR**  | `diary_wide()`  | Sleep diary entries, subjective sleep quality |
+| `zeit`   | **zeitR**   | `study_summary()` | Actigraphy metrics, circadian parameters |
 
-## Basic usage
+---
 
-```{r, eval = FALSE}
-library(syncR)
+## Test data
 
-db <- sync(
-  tallie = tallieR::export(),
-  slumb  = slumbR::export(),
-  zeit   = zeitR::export()
-)
+This vignette uses the built-in test data bundled with syncR, which mirrors
+the real output of each package. Load it with `readRDS()`:
+
+```{r load-data}
+tallie <- readRDS(system.file("testdata/tallie_test.rds", package = "syncR"))
+slumb  <- readRDS(system.file("testdata/slumb_test.rds",  package = "syncR"))
+zeit   <- readRDS(system.file("testdata/zeit_test.rds",   package = "syncR"))
 ```
 
-The result is a tidy, participant-indexed tibble with one row per participant
-per night (where applicable), with columns from all supplied sources.
+### tallieR data
 
-## Joining strategies
+One row per participant, with demographics and questionnaire scores from
+`tallieR::scores_wide()`:
 
-By default `sync()` performs a left join anchored on the first supplied source.
-Use the `join` argument to change this:
+```{r show-tallie}
+dplyr::glimpse(tallie)
+```
 
-```{r, eval = FALSE}
-# Only participants present in all three sources
-db_complete <- sync(
-  tallie = tallieR::export(),
-  slumb  = slumbR::export(),
-  zeit   = zeitR::export(),
+Key fields: `participant_id` (the join key), sociodemographic variables
+(`age`, `sex`, `bmi`, `group`), and instrument scores (`ess_score`,
+`isi_score`, `meq_score`).
+
+### slumbR data
+
+One row per participant per night, from `slumbR::diary_wide()` +
+`slumbR::compute_sleep_vars()`. Morning columns are prefixed `m_` and
+evening columns `e_`. Seven nights across five participants gives 35 rows:
+
+```{r show-slumb}
+dplyr::glimpse(slumb)
+```
+
+Key morning fields: timing (`m_bed_time`, `m_rise_time`, `m_sol_min`),
+derived sleep variables (`m_tib_min`, `m_tst_min`, `m_se_pct`), substance
+use (`m_alcohol_drinks`, `m_sleep_aid_used`), clinical flags (`m_sol_flag`,
+`m_waso_flag`, `m_tst_flag`, `m_se_flag`), and subjective ratings
+(`m_sleep_quality`, `m_restedness`).
+
+Key evening fields: napping (`e_nap_taken`, `e_nap_duration_min`), substance
+use (`e_caffeine_drinks`, `e_sleep_med_used`), and activity (`e_exercised`).
+
+### zeitR data
+
+One row per participant, from `zeitR::study_summary()`:
+
+```{r show-zeit}
+dplyr::glimpse(zeit)
+```
+
+Key circadian fields: `IS` (interdaily stability), `IV` (intradaily
+variability), `RA` (relative amplitude), `L5` / `L5_onset`, `M10` /
+`M10_onset`.
+
+---
+
+## Synchronising with `sync()`
+
+### Default left join
+
+The default call performs a **left join** anchored on the first supplied
+source. Since `slumb` has multiple rows per participant, the result expands
+to one row per participant per night — with questionnaire scores and
+circadian variables repeated across all nights for each participant:
+
+```{r sync-default}
+db <- sync(
+  tallie = tallie,
+  slumb  = slumb,
+  zeit   = zeit
+)
+
+dim(db)
+```
+
+```{r sync-preview}
+db |>
+  dplyr::select(
+    participant_id, date,
+    age, sex, ess_score, isi_score, meq_score,
+    m_tst_min, m_se_pct, m_sleep_quality,
+    IS, IV, RA
+  ) |>
+  head(10)
+```
+
+### Inner join
+
+Use `join = "inner"` to retain only participants present in **all three**
+sources:
+
+```{r sync-inner}
+db_inner <- sync(
+  tallie = tallie,
+  slumb  = slumb,
+  zeit   = zeit,
   join   = "inner"
 )
 
-# All participants from any source, NAs where data is absent
-db_all <- sync(
-  tallie = tallieR::export(),
-  slumb  = slumbR::export(),
-  zeit   = zeitR::export(),
-  join   = "full"
-)
+nrow(db_inner)
 ```
 
-## Custom participant ID column
+### Full join
 
-If your data uses a different participant identifier column name, pass it via
-`id_col`:
+Use `join = "full"` to retain **all** participants from any source, filling
+`NA` where data is absent:
 
-```{r, eval = FALSE}
+```{r sync-full}
+db_full <- sync(
+  tallie = tallie,
+  slumb  = slumb,
+  zeit   = zeit,
+  join   = "full"
+)
+
+nrow(db_full)
+```
+
+### Custom participant ID column
+
+If your data uses a different column name, pass it via `id_col`:
+
+```{r sync-idcol, eval = FALSE}
 db <- sync(
   tallie = my_tallie_data,
+  slumb  = my_slumb_data,
   zeit   = my_zeit_data,
   id_col = "pid"
 )
+```
+
+### Partial sync
+
+All sources are optional — pass only what you have:
+
+```{r sync-partial}
+db_partial <- sync(
+  tallie = tallie,
+  zeit   = zeit
+)
+
+dim(db_partial)
+```
+
+---
+
+## Example analyses
+
+With a unified database, cross-domain analyses require no further joining.
+
+### Circadian type vs. sleep efficiency
+
+MEQ chronotype score against actigraphy-derived IS and mean subjective sleep
+efficiency:
+
+```{r analysis-chronotype}
+db |>
+  dplyr::group_by(participant_id) |>
+  dplyr::summarise(
+    meq_score    = dplyr::first(meq_score),
+    IS           = dplyr::first(IS),
+    mean_se_pct  = mean(m_se_pct,        na.rm = TRUE),
+    mean_quality = mean(m_sleep_quality,  na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(meq_score))
+```
+
+### Insomnia severity vs. objective sleep
+
+ISI score against mean TST and WASO from the diary:
+
+```{r analysis-insomnia}
+db |>
+  dplyr::group_by(participant_id) |>
+  dplyr::summarise(
+    isi_score     = dplyr::first(isi_score),
+    mean_tst_h    = mean(m_tst_min,  na.rm = TRUE) / 60,
+    mean_waso_min = mean(m_waso_min, na.rm = TRUE),
+    mean_se_pct   = mean(m_se_pct,   na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(isi_score))
+```
+
+### Substance use and sleep quality
+
+Nights with alcohol consumption or sleep aid use, and their impact on next-
+morning sleep quality and efficiency:
+
+```{r analysis-substances}
+db |>
+  dplyr::mutate(
+    any_substance = m_alcohol_drinks > 0 | m_sleep_aid_used | e_caffeine_drinks > 3
+  ) |>
+  dplyr::group_by(any_substance) |>
+  dplyr::summarise(
+    n_nights        = dplyr::n(),
+    mean_tst_h      = mean(m_tst_min,      na.rm = TRUE) / 60,
+    mean_se_pct     = mean(m_se_pct,        na.rm = TRUE),
+    mean_waso_min   = mean(m_waso_min,      na.rm = TRUE),
+    mean_quality    = mean(m_sleep_quality, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### Nights with poor sleep efficiency
+
+Flagging nights where SE < 85%, alongside each participant's circadian
+profile:
+
+```{r analysis-flags}
+db |>
+  dplyr::filter(m_se_flag == TRUE) |>
+  dplyr::select(
+    participant_id, date,
+    m_tst_min, m_se_pct, m_alcohol_drinks, m_sleep_aid_used,
+    IS, RA
+  ) |>
+  dplyr::arrange(m_se_pct)
+```
+
+---
+
+## Working with real data
+
+In a real study, the inputs to `sync()` come directly from the package
+export functions:
+
+```{r real-data, eval = FALSE}
+library(tallieR)
+library(slumbR)
+library(zeitR)
+library(syncR)
+
+tallie <- tallieR::read_scoreme("exports/scoreme_export.json") |>
+  tallieR::scores_wide()
+
+slumb <- slumbR::read_study("exports/sleep_diaries/") |>
+  slumbR::diary_wide()
+
+zeit <- zeitR::read_actigraphy_dir("recordings/", tz = "Europe/London") |>
+  zeitR::study_summary()
+
+db <- sync(
+  tallie = tallie,
+  slumb  = slumb,
+  zeit   = zeit
+)
+```
+
+---
+
+## Session info
+
+```{r session-info}
+sessionInfo()
 ```
