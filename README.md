@@ -9,6 +9,10 @@
 
 ---
 
+> ⚠️ **syncR is in early development and has not been formally tested.** The API may change without notice and the package has not undergone peer review. Use with caution and verify outputs independently before using in any research context.
+
+---
+
 ## 📖 What is syncR?
 
 syncR provides a single, unified entry point for bringing together data across the Circadia Lab package ecosystem. It pulls sociodemographic and questionnaire data from **tallieR**, sleep diary data from **slumbR**, and actigraphy-derived circadian metrics from **zeitR** into one tidy, participant-indexed database.
