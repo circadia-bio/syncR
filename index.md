@@ -11,6 +11,13 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://syncr.circadi
 
 ------------------------------------------------------------------------
 
+> ⚠️ **syncR is in early development and has not been formally tested.**
+> The API may change without notice and the package has not undergone
+> peer review. Use with caution and verify outputs independently before
+> using in any research context.
+
+------------------------------------------------------------------------
+
 ## 📖 What is syncR?
 
 syncR provides a single, unified entry point for bringing together data

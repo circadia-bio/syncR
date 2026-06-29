@@ -394,7 +394,7 @@ db <- sync(
 
 ``` r
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -423,8 +423,8 @@ sessionInfo()
 #>  [9] jsonlite_2.0.0    glue_1.8.1        htmltools_0.5.9   ragg_1.5.2       
 #> [13] sass_0.4.10       rmarkdown_2.31    tibble_3.3.1      evaluate_1.0.5   
 #> [17] jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5  
-#> [21] compiler_4.6.0    fs_2.1.0          pkgconfig_2.0.3   systemfonts_1.3.2
+#> [21] compiler_4.6.1    fs_2.1.0          pkgconfig_2.0.3   systemfonts_1.3.2
 #> [25] digest_0.6.39     R6_2.6.1          utf8_1.2.6        tidyselect_1.2.1 
 #> [29] pillar_1.11.1     magrittr_2.0.5    bslib_0.11.0      withr_3.0.3      
-#> [33] tools_4.6.0       pkgdown_2.2.0     cachem_1.1.0      desc_1.4.3
+#> [33] tools_4.6.1       pkgdown_2.2.0     cachem_1.1.0      desc_1.4.3
 ```
