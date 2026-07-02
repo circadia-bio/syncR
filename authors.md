@@ -11,7 +11,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/circadia-bio/syncR/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/circadia-bio/syncR/blob/v0.1.0/DESCRIPTION)
 
 França L, Leocadio-Miguel M (2026). *syncR: Integrate and Coordinate
 Data Across the Circadia Lab Package Ecosystem*. R package version
