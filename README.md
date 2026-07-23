@@ -102,9 +102,9 @@ db <- sync(tallie = ..., slumb = ..., zeit = ..., join = "full")
 
 ## 🤝 Related Tools
 
-- 🌙 [**slumbR**](https://github.com/circadia-bio/slumbR) — sleep diary data collection and processing
-- ⏱️ [**zeitR**](https://github.com/circadia-bio/zeitR) — wrist actigraphy analysis and circadian rhythm metrics
-- 📋 [**tallieR**](https://github.com/circadia-bio/tallieR) — sociodemographic and questionnaire data management
+- 🛌 [**slumbR**](https://github.com/circadia-bio/slumbR) — sleep diary data collection and processing
+- ⌚️ [**zeitR**](https://github.com/circadia-bio/zeitR) — wrist actigraphy analysis and circadian rhythm metrics
+- 🧮 [**tallieR**](https://github.com/circadia-bio/tallieR) — sociodemographic and questionnaire data management
 - 🔬 [**circadia-bio**](https://github.com/circadia-bio) — the Circadia Lab GitHub organisation
 
 ## 📄 Licence
