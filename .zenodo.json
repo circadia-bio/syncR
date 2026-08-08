@@ -1,0 +1,34 @@
+{
+  "title": "syncR: Integrate and Coordinate Data Across the Circadia Lab Package Ecosystem",
+  "description": "syncR is the integrator and coordinator of the Circadia Lab R ecosystem. It pulls sociodemographic and questionnaire data from tallieR, sleep diary data from slumbR, and actigraphy-derived circadian metrics from zeitR into a single unified, participant-indexed database.",
+  "creators": [
+    {
+      "name": "França, Lucas",
+      "affiliation": "Northumbria University",
+      "orcid": "0000-0003-0853-1319"
+    },
+    {
+      "name": "Leocadio-Miguel, Mario",
+      "affiliation": "Northumbria University",
+      "orcid": "0000-0002-7248-3529"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "keywords": [
+    "data integration",
+    "sleep",
+    "actigraphy",
+    "chronobiology",
+    "R package",
+    "Circadia Lab"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/circadia-bio/syncR",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}
